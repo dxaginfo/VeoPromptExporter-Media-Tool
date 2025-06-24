@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VeoPromptExporter - Media Automation Tool</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+  <style>
+    body {
+      background-color: #f8f9fa;
+      color: #343a40;
+    }
+    .header {
+      background-color: #212529;
+      color: white;
+      padding: 2rem 0;
+      margin-bottom: 2rem;
+    }
+    .feature-icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: #0d6efd;
+    }
+    .form-section {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+    .preview-section {
+      background-color: #e9ecef;
+      border-radius: 8px;
+      padding: 1rem;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .footer {
+      background-color: #212529;
+      color: white;
+      padding: 1rem 0;
+      margin-top: 2rem;
+    }
+    .validation-message {
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+    .validation-valid {
+      background-color: #d1e7dd;
+      color: #0f5132;
+    }
+    .validation-warning {
+      background-color: #fff3cd;
+      color: #664d03;
+    }
+    .validation-error {
+      background-color: #f8d7da;
+      color: #842029;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-md-8">
+          <h1>VeoPromptExporter</h1>
+          <p class="lead">Export and format video prompts for AI-powered video generation platforms</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+          <a href="https://github.com/dxaginfo/VeoPromptExporter-Media-Tool" class="btn btn-outline-light">GitHub</a>
+          <a href="docs/index.html" class="btn btn-outline-light ms-2">Documentation</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="row mb-4">
+      <div class="col-md-4">
+        <div class="text-center">
+          <div class="feature-icon">📝</div>
+          <h3>Extract Prompts</h3>
+          <p>Extract structured prompts from various source materials including scripts, storyboards, and notes.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="text-center">
+          <div class="feature-icon">🔍</div>
+          <h3>Validate & Enhance</h3>
+          <p>Validate prompts against platform requirements and enhance them with Gemini API.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="text-center">
+          <div class="feature-icon">💾</div>
+          <h3>Export Anywhere</h3>
+          <p>Export formatted prompts to various platforms and file formats with versioning.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h2 class="mb-4">Create & Export Prompt</h2>
+      <form id="promptForm">
+        <div class="mb-3">
+          <label for="sourceContent" class="form-label">Prompt Content</label>
+          <textarea id="sourceContent" class="form-control" rows="5" placeholder="Enter your prompt here..."></textarea>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <label for="sourceType" class="form-label">Source Type</label>
+            <select id="sourceType" class="form-select">
+              <option value="text">Text</option>
+              <option value="document">Document</option>
+              <option value="structured">Structured (JSON)</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label for="targetPlatform" class="form-label">Target Platform</label>
+            <select id="targetPlatform" class="form-select">
+              <option value="midjourney">Midjourney</option>
+              <option value="stable_diffusion">Stable Diffusion</option>
+              <option value="dall_e">DALL-E</option>
+              <option value="runway">Runway</option>
+              <option value="custom">Custom Platform</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label for="exportFormat" class="form-label">Export Format</label>
+            <select id="exportFormat" class="form-select">
+              <option value="json">JSON</option>
+              <option value="txt">Text</option>
+              <option value="csv">CSV</option>
+              <option value="xml">XML</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="useGemini" checked>
+            <label class="form-check-label" for="useGemini">Enhance with Gemini API</label>
+          </div>
+        </div>
+
+        <div class="mb-3" id="enhancementOptions">
+          <div class="row">
+            <div class="col-md-6">
+              <label for="detailLevel" class="form-label">Detail Level</label>
+              <select id="detailLevel" class="form-select">
+                <option value="basic">Basic</option>
+                <option value="standard" selected>Standard</option>
+                <option value="detailed">Detailed</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <div class="form-check mt-4">
+                <input class="form-check-input" type="checkbox" id="includeMetadata" checked>
+                <label class="form-check-label" for="includeMetadata">Include Metadata</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-3 text-end">
+          <button type="button" id="validateBtn" class="btn btn-secondary me-2">Validate</button>
+          <button type="button" id="exportBtn" class="btn btn-primary">Export</button>
+        </div>
+      </form>
+
+      <div id="validationResult" class="mt-4" style="display: none;">
+        <h4>Validation Result</h4>
+        <div id="validationMessage" class="validation-message"></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6">
+        <div class="form-section">
+          <h3>Preview</h3>
+          <div class="preview-section">
+            <pre id="previewContent">No content to preview</pre>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="form-section">
+          <h3>Export Result</h3>
+          <div id="exportResult" class="preview-section">
+            <p>No export data available</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h2 class="mb-4">Batch Processing</h2>
+      <form id="batchForm">
+        <div class="mb-3">
+          <label for="folderId" class="form-label">Google Drive Folder ID</label>
+          <input type="text" id="folderId" class="form-control" placeholder="Enter Google Drive folder ID">
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label for="batchTargetPlatform" class="form-label">Target Platform</label>
+            <select id="batchTargetPlatform" class="form-select">
+              <option value="midjourney">Midjourney</option>
+              <option value="stable_diffusion">Stable Diffusion</option>
+              <option value="dall_e">DALL-E</option>
+              <option value="runway">Runway</option>
+              <option value="custom">Custom Platform</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label for="batchExportFormat" class="form-label">Export Format</label>
+            <select id="batchExportFormat" class="form-select">
+              <option value="json">JSON</option>
+              <option value="txt">Text</option>
+              <option value="csv">CSV</option>
+              <option value="xml">XML</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mb-3 text-end">
+          <button type="button" id="batchProcessBtn" class="btn btn-primary">Process Batch</button>
+        </div>
+      </form>
+
+      <div id="batchResult" class="mt-4" style="display: none;">
+        <h4>Batch Processing Result</h4>
+        <div id="batchSummary" class="alert alert-info"></div>
+        <div class="preview-section">
+          <pre id="batchDetails"></pre>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-6">
+          <p>© 2025 VeoPromptExporter</p>
+        </div>
+        <div class="col-md-6 text-md-end">
+          <p>Powered by Gemini API and Google Cloud</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Mock implementation of the VeoPromptExporter for UI demonstration
+    class MockVeoPromptExporter {
+      async exportPrompt(options) {
+        console.log('Export options:', options);
+        
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Mock enhanced prompt
+        const enhancedPrompt = options.sourceContent.length > 50 ? 
+          options.sourceContent : 
+          `Enhanced version of: ${options.sourceContent} with additional details suitable for ${options.targetPlatform}`;
+        
+        // Extract some basic metadata
+        const promptText = options.sourceContent.toLowerCase();
+        const metadata = {
+          style: promptText.includes('cyberpunk') ? 'cyberpunk' : 
+                promptText.includes('noir') ? 'film noir' : 'standard',
+          subject: promptText.includes('detective') ? 'detective' : 
+                  promptText.includes('character') ? 'character' : 'scene',
+          setting: promptText.includes('urban') ? 'urban' : 
+                  promptText.includes('office') ? 'office' : 'unspecified',
+          quality: promptText.includes('detailed') ? 'detailed' : 
+                  promptText.includes('high quality') ? 'high quality' : 'standard',
+          generatedTimestamp: new Date().toISOString()
+        };
+        
+        // Mock validation status
+        const forbidden = ['nsfw', 'nude', 'explicit', 'disturbing'];
+        let validationStatus = 'valid';
+        let validationMessage = `Prompt successfully validated for ${options.targetPlatform}`;
+        
+        for (const word of forbidden) {
+          if (promptText.includes(word)) {
+            validationStatus = 'error';
+            validationMessage = `Prompt contains forbidden content: "${word}"`;
+            break;
+          }
+        }
+        
+        if (validationStatus === 'valid' && options.sourceContent.length > 500 && options.targetPlatform === 'midjourney') {
+          validationStatus = 'warning';
+          validationMessage = `Prompt exceeds maximum length of 500 characters for ${options.targetPlatform}`;
+        }
+        
+        // Generate mock export URL
+        const timestamp = new Date().getTime();
+        const mockUrl = `https://drive.google.com/file/d/mock_${timestamp}/view`;
+        
+        return {
+          exportedPrompts: [
+            {
+              id: `prompt_${timestamp}`,
+              prompt: options.sourceContent,
+              enhancedPrompt: enhancedPrompt,
+              metadata,
+              validationStatus,
+              validationMessage
+            }
+          ],
+          summary: {
+            totalPrompts: 1,
+            validPrompts: validationStatus === 'valid' ? 1 : 0,
+            warningPrompts: validationStatus === 'warning' ? 1 : 0,
+            errorPrompts: validationStatus === 'error' ? 1 : 0
+          },
+          exportUrl: mockUrl
+        };
+      }
+      
+      async batchProcessFolder(options) {
+        console.log('Batch process options:', options);
+        
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Mock batch results
+        const timestamp = new Date().getTime();
+        
+        return {
+          exportedPrompts: [
+            {
+              id: `prompt_batch_${timestamp}_1`,
+              prompt: "Urban cityscape at sunset with dramatic lighting",
+              metadata: { source: `folder_${options.folderId}`, index: 1 },
+              validationStatus: 'valid',
+              validationMessage: 'Prompt successfully validated'
+            },
+            {
+              id: `prompt_batch_${timestamp}_2`,
+              prompt: "Forest path with morning fog and sunlight streaming through trees",
+              metadata: { source: `folder_${options.folderId}`, index: 2 },
+              validationStatus: 'valid',
+              validationMessage: 'Prompt successfully validated'
+            },
+            {
+              id: `prompt_batch_${timestamp}_3`,
+              prompt: "Close-up portrait with bokeh background, natural lighting",
+              metadata: { source: `folder_${options.folderId}`, index: 3 },
+              validationStatus: 'valid',
+              validationMessage: 'Prompt successfully validated'
+            }
+          ],
+          summary: {
+            totalPrompts: 3,
+            validPrompts: 3,
+            warningPrompts: 0,
+            errorPrompts: 0
+          },
+          exportUrl: `https://drive.google.com/drive/folders/${options.folderId}`
+        };
+      }
+    }
+
+    // UI interaction code
+    document.addEventListener('DOMContentLoaded', function() {
+      const veoExporter = new MockVeoPromptExporter();
+      
+      // Elements
+      const sourceContentEl = document.getElementById('sourceContent');
+      const sourceTypeEl = document.getElementById('sourceType');
+      const targetPlatformEl = document.getElementById('targetPlatform');
+      const exportFormatEl = document.getElementById('exportFormat');
+      const useGeminiEl = document.getElementById('useGemini');
+      const detailLevelEl = document.getElementById('detailLevel');
+      const includeMetadataEl = document.getElementById('includeMetadata');
+      const validateBtnEl = document.getElementById('validateBtn');
+      const exportBtnEl = document.getElementById('exportBtn');
+      const previewContentEl = document.getElementById('previewContent');
+      const exportResultEl = document.getElementById('exportResult');
+      const validationResultEl = document.getElementById('validationResult');
+      const validationMessageEl = document.getElementById('validationMessage');
+      
+      // Batch processing elements
+      const folderIdEl = document.getElementById('folderId');
+      const batchTargetPlatformEl = document.getElementById('batchTargetPlatform');
+      const batchExportFormatEl = document.getElementById('batchExportFormat');
+      const batchProcessBtnEl = document.getElementById('batchProcessBtn');
+      const batchResultEl = document.getElementById('batchResult');
+      const batchSummaryEl = document.getElementById('batchSummary');
+      const batchDetailsEl = document.getElementById('batchDetails');
+      
+      // Toggle enhancement options
+      useGeminiEl.addEventListener('change', function() {
+        document.getElementById('enhancementOptions').style.display = this.checked ? 'block' : 'none';
+      });
+      
+      // Update preview on content change
+      sourceContentEl.addEventListener('input', updatePreview);
+      
+      function updatePreview() {
+        const content = sourceContentEl.value.trim();
+        if (content) {
+          previewContentEl.textContent = content;
+        } else {
+          previewContentEl.textContent = 'No content to preview';
+        }
+      }
+      
+      // Validate button click handler
+      validateBtnEl.addEventListener('click', async function() {
+        const content = sourceContentEl.value.trim();
+        if (!content) {
+          alert('Please enter prompt content');
+          return;
+        }
+        
+        try {
+          validateBtnEl.disabled = true;
+          validateBtnEl.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Validating...';
+          
+          const result = await veoExporter.exportPrompt({
+            sourceContent: content,
+            sourceType: sourceTypeEl.value,
+            targetPlatform: targetPlatformEl.value,
+            exportFormat: exportFormatEl.value,
+            enhancementOptions: {
+              useGemini: useGeminiEl.checked,
+              detailLevel: detailLevelEl.value,
+              includeMetadata: includeMetadataEl.checked
+            }
+          });
+          
+          const prompt = result.exportedPrompts[0];
+          validationResultEl.style.display = 'block';
+          validationMessageEl.className = 'validation-message validation-' + prompt.validationStatus;
+          validationMessageEl.textContent = prompt.validationMessage;
+          
+          // Update preview with enhanced content if available
+          if (prompt.enhancedPrompt && useGeminiEl.checked) {
+            previewContentEl.textContent = prompt.enhancedPrompt;
+          }
+        } catch (error) {
+          console.error('Validation error:', error);
+          validationResultEl.style.display = 'block';
+          validationMessageEl.className = 'validation-message validation-error';
+          validationMessageEl.textContent = `Error: ${error.message}`;
+        } finally {
+          validateBtnEl.disabled = false;
+          validateBtnEl.textContent = 'Validate';
+        }
+      });
+      
+      // Export button click handler
+      exportBtnEl.addEventListener('click', async function() {
+        const content = sourceContentEl.value.trim();
+        if (!content) {
+          alert('Please enter prompt content');
+          return;
+        }
+        
+        try {
+          exportBtnEl.disabled = true;
+          exportBtnEl.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Exporting...';
+          
+          const result = await veoExporter.exportPrompt({
+            sourceContent: content,
+            sourceType: sourceTypeEl.value,
+            targetPlatform: targetPlatformEl.value,
+            exportFormat: exportFormatEl.value,
+            enhancementOptions: {
+              useGemini: useGeminiEl.checked,
+              detailLevel: detailLevelEl.value,
+              includeMetadata: includeMetadataEl.checked
+            }
+          });
+          
+          // Display validation result
+          const prompt = result.exportedPrompts[0];
+          validationResultEl.style.display = 'block';
+          validationMessageEl.className = 'validation-message validation-' + prompt.validationStatus;
+          validationMessageEl.textContent = prompt.validationMessage;
+          
+          // Update preview with enhanced content if available
+          if (prompt.enhancedPrompt && useGeminiEl.checked) {
+            previewContentEl.textContent = prompt.enhancedPrompt;
+          }
+          
+          // Display export result
+          exportResultEl.innerHTML = `
+            <div class="alert alert-success mb-3">
+              <strong>Export Successful!</strong> <a href="${result.exportUrl}" target="_blank">Open file</a>
+            </div>
+            <h5>Summary</h5>
+            <ul>
+              <li>Total prompts: ${result.summary.totalPrompts}</li>
+              <li>Valid prompts: ${result.summary.validPrompts}</li>
+              <li>Warnings: ${result.summary.warningPrompts}</li>
+              <li>Errors: ${result.summary.errorPrompts}</li>
+            </ul>
+            <h5>Details</h5>
+            <pre>${JSON.stringify(result, null, 2)}</pre>
+          `;
+        } catch (error) {
+          console.error('Export error:', error);
+          exportResultEl.innerHTML = `
+            <div class="alert alert-danger">
+              <strong>Export Failed:</strong> ${error.message}
+            </div>
+          `;
+        } finally {
+          exportBtnEl.disabled = false;
+          exportBtnEl.textContent = 'Export';
+        }
+      });
+      
+      // Batch process button click handler
+      batchProcessBtnEl.addEventListener('click', async function() {
+        const folderId = folderIdEl.value.trim();
+        if (!folderId) {
+          alert('Please enter a Google Drive folder ID');
+          return;
+        }
+        
+        try {
+          batchProcessBtnEl.disabled = true;
+          batchProcessBtnEl.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+          
+          const result = await veoExporter.batchProcessFolder({
+            folderId,
+            targetPlatform: batchTargetPlatformEl.value,
+            enhancementOptions: {
+              useGemini: true,
+              detailLevel: 'detailed'
+            }
+          });
+          
+          // Display batch processing results
+          batchResultEl.style.display = 'block';
+          batchSummaryEl.textContent = `Processed ${result.summary.totalPrompts} prompts (${result.summary.validPrompts} valid, ${result.summary.warningPrompts} warnings, ${result.summary.errorPrompts} errors). Export available at: ${result.exportUrl}`;
+          batchDetailsEl.textContent = JSON.stringify(result, null, 2);
+        } catch (error) {
+          console.error('Batch processing error:', error);
+          batchResultEl.style.display = 'block';
+          batchSummaryEl.className = 'alert alert-danger';
+          batchSummaryEl.textContent = `Error: ${error.message}`;
+          batchDetailsEl.textContent = '';
+        } finally {
+          batchProcessBtnEl.disabled = false;
+          batchProcessBtnEl.textContent = 'Process Batch';
+        }
+      });
+      
+      // Add sample prompts for demo
+      document.getElementById('sourceContent').value = 'Cinematic still of a cyberpunk detective in a neon-lit office, examining holographic evidence, film noir lighting, detailed, 8k, realistic';
+      updatePreview();
+    });
+  </script>
+</body>
+</html>
